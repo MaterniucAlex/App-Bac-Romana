@@ -68,7 +68,7 @@ for ABI in $ABIS; do
 
 	# Compile native app glue
 	# .c -> .o
-	$CC -c $NATIVE_APP_GLUE/android_native_app_glue.c -o $NATIVE_APP_GLUE/native_app_glue.o \
+	$CC -DSCALE=1 -c $NATIVE_APP_GLUE/android_native_app_glue.c -o $NATIVE_APP_GLUE/native_app_glue.o \
 		$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
 
 	# .o -> .a
@@ -80,8 +80,12 @@ for ABI in $ABIS; do
 			$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
 	done
 
+	for file in src/**/*.c; do
+		$CC -c $file -o "$file".o \
+			$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
+	done
         # Link the project with toolchain specific linker to avoid relocations issue
-	$TOOLCHAIN/bin/ld.lld src/*.o -o android/build/lib/$ABI/libmain.so -shared \
+	$TOOLCHAIN/bin/ld.lld src/*.o src/**/*.o -o android/build/lib/$ABI/libmain.so -shared \
 		--exclude-libs libatomic.a --build-id \
 		-z noexecstack -z relro -z now \
 		--warn-shared-textrel --fatal-warnings -u ANativeActivity_onCreate \
@@ -131,7 +135,7 @@ mv -f game.final.apk game.apk
 android/sdk/build-tools/29.0.3/apksigner sign  --ks android/raylib.keystore --out my-app-release.apk --ks-pass pass:raylib game.apk
 mv my-app-release.apk game.apk
 
-rm src/*.o
+rm src/*.o src/**/*.o
 
 # Install to device or emulator
 # android/sdk/platform-tools/adb install -r game.apk
