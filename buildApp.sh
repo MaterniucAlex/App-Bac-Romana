@@ -27,7 +27,7 @@ cp assets/icon_hdpi.png android/build/res/drawable-hdpi/icon.png
 cp assets/icon_xhdpi.png android/build/res/drawable-xhdpi/icon.png
 
 # Copy other assets
-cp assets/* android/build/assets
+cp -r assets/* android/build/assets
 
 # ______________________________________________________________________________
 #
@@ -68,7 +68,7 @@ for ABI in $ABIS; do
 
 	# Compile native app glue
 	# .c -> .o
-	$CC -DSCALE=1 -c $NATIVE_APP_GLUE/android_native_app_glue.c -o $NATIVE_APP_GLUE/native_app_glue.o \
+	$CC -c $NATIVE_APP_GLUE/android_native_app_glue.c -o $NATIVE_APP_GLUE/native_app_glue.o \
 		$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
 
 	# .o -> .a
@@ -76,12 +76,12 @@ for ABI in $ABIS; do
 
 	# Compile project
 	for file in src/*.c; do
-		$CC -c $file -o "$file".o \
+		$CC -DPHONE -c $file -o "$file".o \
 			$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
 	done
 
 	for file in src/**/*.c; do
-		$CC -c $file -o "$file".o \
+		$CC -DPHONE -c $file -o "$file".o \
 			$INCLUDES -I$TOOLCHAIN/sysroot/usr/include/$CCTYPE $FLAGS $ABI_FLAGS
 	done
         # Link the project with toolchain specific linker to avoid relocations issue
