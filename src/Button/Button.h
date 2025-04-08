@@ -10,6 +10,7 @@ typedef struct {
   int h;
   void (*action)();
   int tag;
+  char *text;
 } Button;
 
 Button createButton(int x, int y, int w, int h, void (*action)());

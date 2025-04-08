@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "raylib.h"
 #include "Button/Button.h"
+#include "Opere/opere.h"
 
 #ifndef PHONE 
 #define PHONE_WIDTH  (1080 * 0.3)
@@ -31,10 +32,11 @@ enum GameState {
 
 enum GameState currentState;
 
+Opera listOpere[15];
+
 void init();
 void update();
 void render();
-void quit();
 void selectScene(int stateID);
 void setGamestate(enum GameState gs);
 void respawn(Button *btn);
@@ -52,7 +54,6 @@ int main()
     render();
   }
 
-  quit();
   CloseWindow();
 
   return 0;
@@ -68,6 +69,8 @@ void init()
 
   int buttonWidth = PHONE_WIDTH / 7;
 
+  initOpere(listOpere);
+
   //bar buttons
   buttonList[0] = createButton(1 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
   buttonList[1] = createButton(3 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
@@ -79,10 +82,14 @@ void init()
   fallingButtonList[0] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
   fallingButtonList[1] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
   fallingButtonList[2] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
-
-  setButtonTag(&buttonList[0], 0);
-  setButtonTag(&buttonList[1], 1);
-  setButtonTag(&buttonList[2], 2);
+  setButtonTag(&buttonList[0], rand() % 15);
+  do {
+    setButtonTag(&buttonList[1], rand() % 15);
+  } while(buttonList[1].tag == buttonList[0].tag);
+  
+  do {
+    setButtonTag(&buttonList[2], rand() % 15);
+  } while(buttonList[2].tag == buttonList[0].tag || buttonList[2].tag == buttonList[1].tag);
   respawn(&fallingButtonList[0]);
   respawn(&fallingButtonList[1]);
   respawn(&fallingButtonList[2]);
@@ -90,10 +97,10 @@ void init()
   fallingButtonList[1].y -= buttonWidth * 2;
   fallingButtonList[2].y -= buttonWidth * 4;
 
-  char *fileData = LoadFileText("assets/savedata/highScore.sv");
+  ChangeDirectory("assets");
+  char *fileData = LoadFileText("savedata/highScore.sv");
   highScore = atoi(fileData);
   score = 0;
-
 }
 
 void update()
@@ -103,7 +110,7 @@ void update()
     for(int i = 0; i < 3; i++)
     {
       fallingButtonList[i].y += PHONE_HEIGHT / 60 / 4;
-      if (fallingButtonList[i].y >= PHONE_HEIGHT)
+      if (fallingButtonList[i].y >= PHONE_HEIGHT / 10 * 9)
       {
         respawn(&fallingButtonList[i]);
         score -= 300;
@@ -145,10 +152,19 @@ void update()
       fallingButtonList[i].action(&fallingButtonList[i]);
     }
   }
-  if (isButtonPressed(buttonList[4])) buttonList[4].action(PAUSED);
+  if (isButtonPressed(buttonList[4])){
+    buttonList[4].action(PAUSED);
+
+    if (score > highScore)
+    {
+      char* scoreStr;
+      snprintf(scoreStr, 6, "%d", score);
+      SaveFileText("savedata/highScore.sv", scoreStr);
+    }
+  }
 
   if (score > highScore) 
-    scoreColor = GREEN;
+    scoreColor = DARKGREEN;
   else 
     scoreColor = BLACK;
 
@@ -162,44 +178,27 @@ void render()
   {
     ClearBackground(RAYWHITE);
     drawButton(buttonList[3], GRAY);
-    DrawText("Play", buttonList[3].x, buttonList[3].y, 24, BLACK);
+    DrawText("Play", buttonList[3].x, buttonList[3].y, buttonList[3].h / 3, BLACK);
     EndDrawing();
     return;
   }
 
-  switch (selectedID)
-  {
-    default:
-    case -1:
-      ClearBackground(RAYWHITE);
-      break;
-    case 0:
+
+  if (selectedID == -1)
+    ClearBackground(RAYWHITE);
+  if (selectedID == buttonList[0].tag)
       ClearBackground(RED);
-      break;
-    case 1:
+  if (selectedID == buttonList[1].tag)
       ClearBackground(BLUE);
-      break;
-    case 2:
+  if (selectedID == buttonList[2].tag)
       ClearBackground(GREEN);
-      break;
-  }
 
   for(int i = 0; i < 3; i++)
   {
-    switch (fallingButtonList[i].tag) {
-      case 0:
-        drawButton(fallingButtonList[i], PINK);
-        break;
-      case 1:
-        drawButton(fallingButtonList[i], DARKBLUE);
-        break;
-      case 2:
-        drawButton(fallingButtonList[i], DARKGREEN);
-        break;
-    }
     int pieceScore = 100 - fallingButtonList[i].y / (int)(PHONE_HEIGHT / 100);
     DrawText(TextFormat("%d", pieceScore),
              fallingButtonList[i].x, fallingButtonList[i].y - fallingButtonList[i].h / 3 , fallingButtonList[i].h / 3, BLACK);
+    DrawText(fallingButtonList[i].text, fallingButtonList[i].x, fallingButtonList[i].y, fallingButtonList[i].h / 3, BLACK);
   }
 
   DrawText(TextFormat("%d", score), 0, 0, PHONE_WIDTH / 8, scoreColor);
@@ -209,8 +208,11 @@ void render()
 
   //State buttons
   drawButton(buttonList[0], RED);
+  DrawText(TextFormat("%s", listOpere[buttonList[0].tag].titlu), buttonList[0].x, buttonList[0].y, buttonList[0].h / 3, BLACK);
   drawButton(buttonList[1], BLUE);
+  DrawText(TextFormat("%s", listOpere[buttonList[1].tag].titlu), buttonList[1].x, buttonList[1].y, buttonList[1].h / 3, BLACK);
   drawButton(buttonList[2], GREEN);
+  DrawText(TextFormat("%s", listOpere[buttonList[2].tag].titlu), buttonList[2].x, buttonList[2].y, buttonList[2].h / 3, BLACK);
 
   drawButton(buttonList[4], YELLOW);
 
@@ -218,13 +220,6 @@ void render()
     DrawText("Paused", PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 24, PHONE_WIDTH / 12, BLACK);
 
   EndDrawing();
-}
-
-void quit()
-{
-  char* scoreStr;
-  sprintf(scoreStr, "%d", score);
-  SaveFileText("assets/savedata/highScore.sv", scoreStr);
 }
 
 void selectScene(int stateID)
@@ -246,4 +241,18 @@ void respawn(Button *btn)
   btn->x = row * PHONE_WIDTH / 7;
   btn->y = -PHONE_WIDTH / 7;
   setButtonTag(btn, buttonList[rand() % 3].tag);
+
+  switch (rand() % 3) {
+    case 0:
+      btn->text = listOpere[btn->tag].anAparitie;
+      break;
+    case 1:
+      btn->text = listOpere[btn->tag].autor;
+      break;
+    case 2:
+      btn->text = listOpere[btn->tag].curentLiterar;
+      break;
+    default:
+      break;
+  }
 }
