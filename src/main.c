@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "raylib.h"
 #include "Button/Button.h"
 #include "Opere/opere.h"
@@ -24,6 +25,10 @@ Button fallingButtonList[3];
 int selectedID = -1;
 Color scoreColor = BLACK;
 
+#define COLUMN_NR 5
+#define SECONDS_TO_FALL 6
+#define NR_OPERE 3
+
 enum GameState {
   MAIN_MENU,
   GAME,
@@ -40,6 +45,7 @@ void render();
 void selectScene(int stateID);
 void setGamestate(enum GameState gs);
 void respawn(Button *btn);
+void drawCustomText(char *text, int x, int y, int fontSize);
 
 int score;
 int highScore;
@@ -67,14 +73,15 @@ void init()
   SetTargetFPS(60);
   currentState = MAIN_MENU;
 
-  int buttonWidth = PHONE_WIDTH / 7;
+  int buttonWidth = PHONE_WIDTH / COLUMN_NR;
 
   initOpere(listOpere);
 
   //bar buttons
-  buttonList[0] = createButton(1 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
-  buttonList[1] = createButton(3 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
-  buttonList[2] = createButton(5 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
+  int gap = (PHONE_WIDTH - (buttonWidth * 3)) / 4;
+  buttonList[0] = createButton(1 * gap + 0 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
+  buttonList[1] = createButton(2 * gap + 1 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
+  buttonList[2] = createButton(3 * gap + 2 * buttonWidth, PHONE_HEIGHT / 20 * 19 - buttonWidth / 2, buttonWidth, buttonWidth, selectScene);
   //play button
   buttonList[3] = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4, setGamestate);
   //pause button
@@ -82,13 +89,13 @@ void init()
   fallingButtonList[0] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
   fallingButtonList[1] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
   fallingButtonList[2] = createButton(0, 0, buttonWidth, buttonWidth, respawn);
-  setButtonTag(&buttonList[0], rand() % 15);
+  setButtonTag(&buttonList[0], rand() % NR_OPERE);
   do {
-    setButtonTag(&buttonList[1], rand() % 15);
+    setButtonTag(&buttonList[1], rand() % NR_OPERE);
   } while(buttonList[1].tag == buttonList[0].tag);
   
   do {
-    setButtonTag(&buttonList[2], rand() % 15);
+    setButtonTag(&buttonList[2], rand() % NR_OPERE);
   } while(buttonList[2].tag == buttonList[0].tag || buttonList[2].tag == buttonList[1].tag);
   respawn(&fallingButtonList[0]);
   respawn(&fallingButtonList[1]);
@@ -109,7 +116,7 @@ void update()
   if (currentState == GAME)
     for(int i = 0; i < 3; i++)
     {
-      fallingButtonList[i].y += PHONE_HEIGHT / 60 / 4;
+      fallingButtonList[i].y += PHONE_HEIGHT / GetFPS() / SECONDS_TO_FALL;
       if (fallingButtonList[i].y >= PHONE_HEIGHT / 10 * 9)
       {
         respawn(&fallingButtonList[i]);
@@ -197,8 +204,8 @@ void render()
   {
     int pieceScore = 100 - fallingButtonList[i].y / (int)(PHONE_HEIGHT / 100);
     DrawText(TextFormat("%d", pieceScore),
-             fallingButtonList[i].x, fallingButtonList[i].y - fallingButtonList[i].h / 3 , fallingButtonList[i].h / 3, BLACK);
-    DrawText(fallingButtonList[i].text, fallingButtonList[i].x, fallingButtonList[i].y, fallingButtonList[i].h / 3, BLACK);
+             fallingButtonList[i].x, fallingButtonList[i].y - fallingButtonList[i].h / 3 , fallingButtonList[i].h / 4, BLACK);
+    drawCustomText(fallingButtonList[i].text, fallingButtonList[i].x, fallingButtonList[i].y, fallingButtonList[i].h / 4);
   }
 
   DrawText(TextFormat("%d", score), 0, 0, PHONE_WIDTH / 8, scoreColor);
@@ -208,11 +215,11 @@ void render()
 
   //State buttons
   drawButton(buttonList[0], RED);
-  DrawText(TextFormat("%s", listOpere[buttonList[0].tag].titlu), buttonList[0].x, buttonList[0].y, buttonList[0].h / 3, BLACK);
+  drawCustomText(listOpere[buttonList[0].tag].titlu, buttonList[0].x, buttonList[0].y, buttonList[0].h / 4);
   drawButton(buttonList[1], BLUE);
-  DrawText(TextFormat("%s", listOpere[buttonList[1].tag].titlu), buttonList[1].x, buttonList[1].y, buttonList[1].h / 3, BLACK);
+  drawCustomText(listOpere[buttonList[1].tag].titlu, buttonList[1].x, buttonList[1].y, buttonList[1].h / 4);
   drawButton(buttonList[2], GREEN);
-  DrawText(TextFormat("%s", listOpere[buttonList[2].tag].titlu), buttonList[2].x, buttonList[2].y, buttonList[2].h / 3, BLACK);
+  drawCustomText(listOpere[buttonList[2].tag].titlu, buttonList[2].x, buttonList[2].y, buttonList[2].h / 4);
 
   drawButton(buttonList[4], YELLOW);
 
@@ -235,14 +242,14 @@ void setGamestate(enum GameState gs)
 int lastSpawnX = -1;
 void respawn(Button *btn)
 {
-  int row = rand() % 7;
-  while (lastSpawnX == row) row = rand() % 7;
-  lastSpawnX = row;
-  btn->x = row * PHONE_WIDTH / 7;
-  btn->y = -PHONE_WIDTH / 7;
+  int column = rand() % COLUMN_NR;
+  while (lastSpawnX == column) column = rand() % COLUMN_NR;
+  lastSpawnX = column;
+  btn->x = column * PHONE_WIDTH / COLUMN_NR;
+  btn->y = -PHONE_WIDTH / COLUMN_NR;
   setButtonTag(btn, buttonList[rand() % 3].tag);
 
-  switch (rand() % 3) {
+  switch (rand() % 7) {
     case 0:
       btn->text = listOpere[btn->tag].anAparitie;
       break;
@@ -252,7 +259,39 @@ void respawn(Button *btn)
     case 2:
       btn->text = listOpere[btn->tag].curentLiterar;
       break;
-    default:
+    case 3:
+      btn->text = listOpere[btn->tag].temaOperei;
       break;
+    case 4:
+      btn->text = listOpere[btn->tag].elemStr;
+      break;
+    case 5:
+      btn->text = listOpere[btn->tag].scena1;
+      break;
+    case 6:
+      btn->text = listOpere[btn->tag].scena2;
+      break;
+  }
+}
+
+void drawCustomText(char *text, int x, int y, int fontSize)
+{
+  char textCopy[120];
+  strcpy(textCopy, text);
+
+  char *token = strtok(textCopy, " ");
+  int row = 0;
+  while (token)
+  {
+    DrawText(token, x, y + row * fontSize, fontSize, BLACK);
+    int length = strlen(token);
+    if (length < 4)
+    {
+      token = strtok(NULL, " ");
+      int charWidth = fontSize / 9 * 7;
+      DrawText(token, x + charWidth * (length + 1), y + row * fontSize, fontSize, BLACK);
+    }
+    token = strtok(NULL, " ");
+    row++;
   }
 }
