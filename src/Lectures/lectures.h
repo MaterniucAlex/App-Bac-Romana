@@ -1,6 +1,6 @@
 #pragma once
-#ifndef OPERE 
-#define OPERE
+#ifndef LECTURE
+#define LECTURE
 
 typedef struct {
   char *titlu;
@@ -11,8 +11,8 @@ typedef struct {
   char *elemStr;
   char *scena1;
   char *scena2;
-} Opera;
+} Lecture;
 
-void initOpere(Opera *listOpere);
+void initLectures(Lecture *listLectures);
 
 #endif

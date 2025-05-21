@@ -1,21 +1,14 @@
 #include "Button.h"
 
-Button createButton(int x, int y, int w, int h, void (*action)())
+Button createButton(int x, int y, int w, int h)
 {
   Button btn;
   btn.x = x;
   btn.y = y;
   btn.w = w;
   btn.h = h;
-  btn.action = action;
-  btn.tag = -1;
 
   return btn;
-}
-
-void setButtonTag(Button *btn, int tag)
-{
-  btn->tag = tag;
 }
 
 int isButtonPressed(Button btn)
