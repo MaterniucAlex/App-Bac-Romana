@@ -6,15 +6,12 @@
 #include "Button/Button.h"
 #include "Opere/opere.h"
 
-#ifndef PHONE 
-#define PHONE_WIDTH  (1080 * 0.3)
-#define PHONE_HEIGHT (2412 * 0.3)
-#endif
+int PHONE_WIDTH  = 1080 / 2;
+int PHONE_HEIGHT = 2412 / 2;
 
-#ifdef PHONE
-#define PHONE_WIDTH  1080
-#define PHONE_HEIGHT 2412
-#endif
+#define COLUMN_NR 5
+#define SECONDS_TO_FALL 6.5
+#define NR_OPERE 3
 
 int lastTouchX = 0;
 int lastTouchY = 0;
@@ -25,9 +22,12 @@ Button fallingButtonList[3];
 int selectedID = -1;
 Color scoreColor = BLACK;
 
-#define COLUMN_NR 5
-#define SECONDS_TO_FALL 6
-#define NR_OPERE 3
+int score;
+int highScore;
+
+int FallingButton0TextId = 0;
+int FallingButton1TextId = 0;
+int FallingButton2TextId = 0;
 
 enum GameState {
   MAIN_MENU,
@@ -36,19 +36,18 @@ enum GameState {
 };
 
 enum GameState currentState;
+Sound goodSound;
 
 Opera listOpere[15];
 
 void init();
 void update();
 void render();
+void quit();
 void selectScene(int stateID);
 void setGamestate(enum GameState gs);
-void respawn(Button *btn);
+void respawn(Button *btn, int i);
 void drawCustomText(char *text, int x, int y, int fontSize);
-
-int score;
-int highScore;
 
 int main()
 {
@@ -60,6 +59,8 @@ int main()
     render();
   }
 
+  quit();
+  CloseAudioDevice();
   CloseWindow();
 
   return 0;
@@ -70,8 +71,18 @@ void init()
   srand(time(NULL));
 
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
+
+  #ifdef PHONE
+  MaximizeWindow();
+  ToggleBorderlessWindowed();
+  PHONE_WIDTH  = GetScreenWidth ();
+  PHONE_HEIGHT = GetScreenHeight();
+  #endif
+
+  InitAudioDevice();
   SetTargetFPS(60);
   currentState = MAIN_MENU;
+
 
   int buttonWidth = PHONE_WIDTH / COLUMN_NR;
 
@@ -97,9 +108,9 @@ void init()
   do {
     setButtonTag(&buttonList[2], rand() % NR_OPERE);
   } while(buttonList[2].tag == buttonList[0].tag || buttonList[2].tag == buttonList[1].tag);
-  respawn(&fallingButtonList[0]);
-  respawn(&fallingButtonList[1]);
-  respawn(&fallingButtonList[2]);
+  respawn(&fallingButtonList[0], 0);
+  respawn(&fallingButtonList[1], 1);
+  respawn(&fallingButtonList[2], 2);
 
   fallingButtonList[1].y -= buttonWidth * 2;
   fallingButtonList[2].y -= buttonWidth * 4;
@@ -108,6 +119,8 @@ void init()
   char *fileData = LoadFileText("savedata/highScore.sv");
   highScore = atoi(fileData);
   score = 0;
+
+  goodSound = LoadSound("good.wav");
 }
 
 void update()
@@ -119,7 +132,7 @@ void update()
       fallingButtonList[i].y += PHONE_HEIGHT / GetFPS() / SECONDS_TO_FALL;
       if (fallingButtonList[i].y >= PHONE_HEIGHT / 10 * 9)
       {
-        respawn(&fallingButtonList[i]);
+        respawn(&fallingButtonList[i], i);
         score -= 300;
       }
     }
@@ -149,6 +162,7 @@ void update()
       if (fallingButtonList[i].tag == selectedID)
       {
         pieceScore = 100 - fallingButtonList[i].y / (int)(PHONE_HEIGHT / 100);
+        PlaySound(goodSound);
       }
       else 
       {
@@ -156,7 +170,7 @@ void update()
       }
 
       score += pieceScore;
-      fallingButtonList[i].action(&fallingButtonList[i]);
+      fallingButtonList[i].action(&fallingButtonList[i], i);
     }
   }
   if (isButtonPressed(buttonList[4])){
@@ -164,7 +178,7 @@ void update()
 
     if (score > highScore)
     {
-      char* scoreStr;
+      char scoreStr[6];
       snprintf(scoreStr, 6, "%d", score);
       SaveFileText("savedata/highScore.sv", scoreStr);
     }
@@ -229,6 +243,11 @@ void render()
   EndDrawing();
 }
 
+void quit()
+{
+  UnloadSound(goodSound);
+}
+
 void selectScene(int stateID)
 {
   selectedID = stateID;
@@ -240,7 +259,7 @@ void setGamestate(enum GameState gs)
 }
 
 int lastSpawnX = -1;
-void respawn(Button *btn)
+void respawn(Button *btn, int i)
 {
   int column = rand() % COLUMN_NR;
   while (lastSpawnX == column) column = rand() % COLUMN_NR;
@@ -249,7 +268,22 @@ void respawn(Button *btn)
   btn->y = -PHONE_WIDTH / COLUMN_NR;
   setButtonTag(btn, buttonList[rand() % 3].tag);
 
-  switch (rand() % 7) {
+  int state = -1;
+  switch (i) {
+    case 0:
+      FallingButton0TextId += FallingButton0TextId > 6 ? -7 : 1;
+      state = FallingButton0TextId;
+      break;
+    case 1:
+      FallingButton1TextId += FallingButton1TextId > 6 ? -7 : 1;
+      state = FallingButton1TextId;
+      break;
+    case 2:
+      FallingButton2TextId += FallingButton2TextId > 6 ? -7 : 1;
+      state = FallingButton2TextId;
+      break;
+  }
+  switch (state) {
     case 0:
       btn->text = listOpere[btn->tag].anAparitie;
       break;
