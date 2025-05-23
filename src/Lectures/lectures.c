@@ -82,7 +82,7 @@ void initLectures(Lecture *listLectures)
   listLectures[7].scena2= "Uciderea Anei de catre ghita";
 
 
-  listLectures[8].titlu = "";
+  listLectures[8].titlu = "8";
   listLectures[8].anAparitie = "9999";
   listLectures[8].autor = "";
   listLectures[8].curentLiterar = "";
@@ -92,7 +92,7 @@ void initLectures(Lecture *listLectures)
   listLectures[8].scena2= "";
 
 
-  listLectures[9].titlu = "";
+  listLectures[9].titlu = "9";
   listLectures[9].anAparitie = "9999";
   listLectures[9].autor = "";
   listLectures[9].curentLiterar = "";
@@ -102,7 +102,7 @@ void initLectures(Lecture *listLectures)
   listLectures[9].scena2= "";
 
 
-  listLectures[10].titlu = "";
+  listLectures[10].titlu = "10";
   listLectures[10].anAparitie = "9999";
   listLectures[10].autor = "";
   listLectures[10].curentLiterar = "";
@@ -112,7 +112,7 @@ void initLectures(Lecture *listLectures)
   listLectures[10].scena2= "";
 
 
-  listLectures[11].titlu = "";
+  listLectures[11].titlu = "11";
   listLectures[11].anAparitie = "9999";
   listLectures[11].autor = "";
   listLectures[11].curentLiterar = "";
@@ -122,7 +122,7 @@ void initLectures(Lecture *listLectures)
   listLectures[11].scena2= "";
 
 
-  listLectures[12].titlu = "";
+  listLectures[12].titlu = "12";
   listLectures[12].anAparitie = "9999";
   listLectures[12].autor = "";
   listLectures[12].curentLiterar = "";
@@ -132,7 +132,7 @@ void initLectures(Lecture *listLectures)
   listLectures[12].scena2= "";
 
 
-  listLectures[13].titlu = "";
+  listLectures[13].titlu = "13";
   listLectures[13].anAparitie = "9999";
   listLectures[13].autor = "";
   listLectures[13].curentLiterar = "";
@@ -142,7 +142,7 @@ void initLectures(Lecture *listLectures)
   listLectures[13].scena2= "";
 
 
-  listLectures[14].titlu = "";
+  listLectures[14].titlu = "14";
   listLectures[14].anAparitie = "9999";
   listLectures[14].autor = "";
   listLectures[14].curentLiterar = "";
