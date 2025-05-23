@@ -140,11 +140,18 @@ void update()
 
 
       //cancel swipe action if swipe was too small
-      if (abs(swipeDistanceX) < PHONE_WIDTH / 20 && abs(swipeDistanceY) < PHONE_WIDTH / 20) break;
+      if (abs(swipeDistanceX) < PHONE_WIDTH / 10 && abs(swipeDistanceY) < PHONE_WIDTH / 10) break;
 
+      //see which swipe was bigger and use that
       if (abs(swipeDistanceX) > abs(swipeDistanceY))
       {
         if (swipeDistanceX > 0) 
+
+          //selectedInfo structure : 2 digit number
+          //1st digit : the side where you would have to swipe to for a corrent answer
+          //1 = left ; 2 = right ; 3 = down 
+          //2nd digit : the random information shown from the lecture. See the renderCard function bellow.
+
           score += selectedInfo / 10 == 2 ? 10 : -10;
         if (swipeDistanceX < 0) 
           score += selectedInfo / 10 == 1 ? 10 : -10;
@@ -179,7 +186,7 @@ void update()
       /*}*/
       break;
     case MAIN_MENU:
-      if (isButtonPressed(startButton))
+      if (isScreenTouched() && isButtonPressed(startButton))
         currentState = GAME;
       break;
   }
