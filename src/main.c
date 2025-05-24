@@ -33,6 +33,7 @@ enum GameState {
 
 enum GameState currentState;
 Sound goodSound;
+Sound badSound;
 
 Lecture listLectures[15];
 
@@ -104,12 +105,13 @@ void init()
   card.x = (PHONE_WIDTH - card.width) / 2;
   card.y = (PHONE_HEIGHT - card.height) / 2;
 
-  /*char *fileData = LoadFileText("savedata/highScore.sv");*/
-  /*highScore = atoi(fileData);*/
-  highScore = 0;
+  char *fileData = LoadFileText("savedata/highScore.sv");
+  highScore = atoi(fileData);
+  /*highScore = 0;*/
   score = 0;
 
-  goodSound = LoadSound("good.wav");
+  goodSound = LoadSound("sounds/good.wav");
+  badSound  = LoadSound("sounds/bad.wav");
 }
 
 int swipeDistanceX = 0;
@@ -139,36 +141,32 @@ void update()
       }
 
 
-      //cancel swipe action if swipe was too small
-      if (abs(swipeDistanceX) < PHONE_WIDTH / 10 && abs(swipeDistanceY) < PHONE_WIDTH / 10) break;
+      //cancel swipe action if swipe was too small or if the user swiped up
+      if (abs(swipeDistanceX) < PHONE_WIDTH / 10 && swipeDistanceY < PHONE_WIDTH / 10) break;
+
+      int answerPoints = -10;
 
       //see which swipe was bigger and use that
       if (abs(swipeDistanceX) > abs(swipeDistanceY))
       {
-        if (swipeDistanceX > 0) 
+        //selectedInfo structure : 2 digit number
+        //1st digit : the side where you would have to swipe to for a corrent answer
+        //1 = left ; 2 = right ; 3 = down 
+        //2nd digit : the random information shown from the lecture. See the renderCard function bellow.
 
-          //selectedInfo structure : 2 digit number
-          //1st digit : the side where you would have to swipe to for a corrent answer
-          //1 = left ; 2 = right ; 3 = down 
-          //2nd digit : the random information shown from the lecture. See the renderCard function bellow.
+        if ((swipeDistanceX > 0 && selectedInfo / 10 == 2) || (swipeDistanceX < 0 && selectedInfo / 10 == 1)) 
+          answerPoints = 10;
+      } else 
+      if (selectedInfo / 10 == 3) 
+        answerPoints = 10;
 
-          score += selectedInfo / 10 == 2 ? 10 : -10;
-        if (swipeDistanceX < 0) 
-          score += selectedInfo / 10 == 1 ? 10 : -10;
-        
-        selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+      if (answerPoints > 0)
+        PlaySound(goodSound);
+      else
+       PlaySound(badSound);
 
-        swipeDistanceX = 0;
-        swipeDistanceY = 0;
-
-        break;
-      }
-      if (swipeDistanceY > 0) 
-      {
-        score += selectedInfo / 10 == 3 ? 10 : -10;
-        selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
-      }
-
+      score += answerPoints;
+      selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
       swipeDistanceX = 0;
       swipeDistanceY = 0;
 
@@ -178,12 +176,12 @@ void update()
       if (isScreenTouched())
         currentState = GAME;
 
-      /*if (score > highScore)*/
-      /*{*/
-      /*  char scoreStr[6];*/
-      /*  snprintf(scoreStr, 6, "%d", score);*/
-      /*  SaveFileText("savedata/highScore.sv", scoreStr);*/
-      /*}*/
+      if (score > highScore)
+      {
+        char scoreStr[6];
+        snprintf(scoreStr, 6, "%d", score);
+        SaveFileText("savedata/highScore.sv", scoreStr);
+      }
       break;
     case MAIN_MENU:
       if (isScreenTouched() && isButtonPressed(startButton))
@@ -191,10 +189,10 @@ void update()
       break;
   }
 
-  /*if (score > highScore) */
-  /*  scoreColor = DARKGREEN;*/
-  /*else */
-  /*  scoreColor = BLACK;*/
+  if (score > highScore) 
+    scoreColor = DARKGREEN;
+  else 
+    scoreColor = BLACK;
 }
 
 void renderCard();
@@ -228,7 +226,15 @@ void render()
 void quit()
 {
   UnloadSound(goodSound);
+  UnloadSound(badSound);
   UnloadFont(textFont);
+
+  if (score > highScore)
+  {
+    char scoreStr[6];
+    snprintf(scoreStr, 6, "%d", score);
+    SaveFileText("savedata/highScore.sv", scoreStr);
+  }
 }
 
 void renderCard()
