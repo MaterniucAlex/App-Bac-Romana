@@ -26,3 +26,10 @@ void drawButton(Button btn, Color color)
 {
   DrawRectangle(btn.x, btn.y, btn.w, btn.h, color);
 }
+
+void drawButtonTexture(Button btn, Texture2D *texture)
+{
+  Rectangle sourceRec = {0, 0, texture->width, texture->height};
+  Rectangle destRec   = {btn.x, btn.y, btn.w, btn.h};
+  DrawTexturePro(*texture, sourceRec, destRec, (Vector2){0, 0}, 0, WHITE);
+}

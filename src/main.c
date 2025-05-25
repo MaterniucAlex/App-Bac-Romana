@@ -20,8 +20,6 @@ Button pauseButton;
 
 Rectangle card;
 
-Color scoreColor = BLACK;
-
 int score;
 int highScore;
 int timer;
@@ -38,6 +36,10 @@ enum GameState currentState;
 Sound goodSound;
 Sound badSound;
 
+Texture2D backgroundTexture;
+Texture2D rectTexture;
+Texture2D cardTexture;
+
 Lecture listLectures[15];
 
 int firstLecture;
@@ -50,7 +52,6 @@ void init();
 void update();
 void render();
 void quit();
-void drawWrapedText(char *text, int x, int y, int w, int fontSize);
 
 int main()
 {
@@ -74,6 +75,7 @@ void init()
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
   ChangeDirectory("assets");
   textFont = LoadFont("fonts/0xProtoNerdFontMono-Regular.ttf");
+  SetTextureFilter(textFont.texture, TEXTURE_FILTER_TRILINEAR);
 
   #ifdef PHONE
   MaximizeWindow();
@@ -103,17 +105,20 @@ void init()
   pauseButton = createButton(PHONE_WIDTH / 12 * 11, 0, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
 
   card.width = PHONE_WIDTH / 1.5;
-  card.height = PHONE_HEIGHT / 1.5;
+  card.height = card.width / 2 * 3;
   card.x = (PHONE_WIDTH - card.width) / 2;
   card.y = (PHONE_HEIGHT - card.height) / 2;
 
   char *fileData = LoadFileText("savedata/highScore.sv");
   highScore = atoi(fileData);
-  /*highScore = 0;*/
   score = 0;
 
   goodSound = LoadSound("sounds/good.wav");
   badSound  = LoadSound("sounds/bad.wav");
+
+  backgroundTexture = LoadTexture("img/bg.png");
+  rectTexture       = LoadTexture("img/rect.png");
+  cardTexture       = LoadTexture("img/card.png");
 }
 
 int swipeDistanceX = 0;
@@ -135,6 +140,7 @@ void update()
       if (timer >= maxTime)
       {
         score -= 10;
+        PlaySound(badSound);
         timerStart = GetTime();
         selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
         swipeDistanceX = 0;
@@ -172,15 +178,15 @@ void update()
         //2nd digit : the random information shown from the lecture. See the renderCard function bellow.
 
         if ((swipeDistanceX > 0 && selectedInfo / 10 == 2) || (swipeDistanceX < 0 && selectedInfo / 10 == 1)) 
-          answerPoints = 10;
+          answerPoints = maxTime - timer;
       } else 
       if (selectedInfo / 10 == 3) 
-        answerPoints = 10;
+        answerPoints = maxTime - timer;
 
       if (answerPoints > 0)
         PlaySound(goodSound);
       else
-       PlaySound(badSound);
+        PlaySound(badSound);
 
       score += answerPoints;
       timerStart = GetTime();
@@ -191,8 +197,10 @@ void update()
       break;
     case PAUSED:
 
-      if (isScreenTouched())
-        currentState = GAME;
+      if (!isScreenTouched()) break;
+
+      currentState = GAME;
+      timerStart = GetTime() - timer;
 
       if (score > highScore)
       {
@@ -200,6 +208,7 @@ void update()
         snprintf(scoreStr, 6, "%d", score);
         SaveFileText("savedata/highScore.sv", scoreStr);
       }
+
       break;
     case MAIN_MENU:
       if (isScreenTouched() && isButtonPressed(startButton))
@@ -210,40 +219,75 @@ void update()
       break;
   }
 
-  if (score > highScore) 
-    scoreColor = DARKGREEN;
-  else 
-    scoreColor = BLACK;
 }
 
+void drawWrapedText(char *text, int x, int y, int w, int fontSize);
+void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize);
 void renderCard();
 void render()
 {
   BeginDrawing();
   ClearBackground(RAYWHITE);
 
+  Rectangle sourceRec = {0, 0, backgroundTexture.width, backgroundTexture.height};
+  Rectangle destRec   = {0, 0, PHONE_WIDTH, PHONE_HEIGHT};
+  DrawTexturePro(backgroundTexture, sourceRec, destRec, (Vector2){0, 0}, 0, WHITE);
+
   if (currentState == MAIN_MENU)
   {
-    drawButton(startButton, GRAY);
-    DrawText("Play", startButton.x, startButton.y, startButton.h / 3, BLACK);
+    drawButtonTexture(startButton, &rectTexture);
+    drawTextInMiddleWrapped("Play", startButton.x, startButton.y + startButton.h / 3, startButton.w, startButton.h / 3);
     EndDrawing();
     return;
   }
 
   renderCard();
 
-  drawWrapedText(listLectures[firstLecture] .titlu, PHONE_WIDTH / 100, PHONE_HEIGHT / 2, PHONE_WIDTH / 5, PHONE_HEIGHT / 50);
-  drawWrapedText(listLectures[secondLecture].titlu, PHONE_WIDTH / 100 * 90, PHONE_HEIGHT / 2, PHONE_WIDTH / 5, PHONE_HEIGHT / 50);
-  drawWrapedText(listLectures[thirdLecture] .titlu, PHONE_WIDTH / 2, PHONE_HEIGHT / 35 * 33, PHONE_WIDTH / 5, PHONE_HEIGHT / 50);
+  char *lectureTitle = listLectures[firstLecture].titlu;
+  int titleFontSize = PHONE_WIDTH / 12;
+
+  for(int i = 0; i < strlen(lectureTitle); i++)
+  {
+    char text[2];
+    text[0] = listLectures[firstLecture].titlu[i];
+    text[1] = '\0';
+
+    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
+
+    DrawTextEx(textFont, text, (Vector2){(card.x - titleCharSize.x) / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize * i}, titleFontSize, 1,  WHITE);
+
+  }
+
+  lectureTitle = listLectures[secondLecture].titlu;
+  for(int i = 0; i < strlen(lectureTitle); i++)
+  {
+    char text[2];
+    text[0] = listLectures[secondLecture].titlu[i];
+    text[1] = '\0';
+
+    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
+
+    DrawTextEx(textFont, text, (Vector2){card.x + card.width + (PHONE_WIDTH - card.x - card.width) / 2 - titleCharSize.x / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize * i}, titleFontSize, 1, WHITE);
+
+  }
+
+  drawTextInMiddleWrapped(listLectures[thirdLecture] .titlu, card.x, PHONE_HEIGHT / 35 * 33, card.width, titleFontSize);
 
   char timeStr[6];
   snprintf(timeStr, 6, "%d", maxTime - timer);
-  DrawText(timeStr, 0, 0, 24, BLACK);
+  drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 8, card.width, PHONE_WIDTH / 12);
 
   drawButton(pauseButton, YELLOW);
-  DrawText(TextFormat("%d", score), PHONE_WIDTH / 2, PHONE_HEIGHT / 20, PHONE_WIDTH / 8, scoreColor);
+
+  char scoreStr[6];
+  snprintf(scoreStr, 6, "%d", score);
+
+  drawTextInMiddleWrapped(scoreStr, card.x, PHONE_HEIGHT / 20, card.width, PHONE_WIDTH / 6);
   if (currentState == PAUSED)
-    DrawText("Paused", PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 24, PHONE_WIDTH / 12, BLACK);
+  {
+    DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, (Color){0x00, 0x00, 0x00, 0xAA});
+    drawTextInMiddleWrapped("Paused", card.x, PHONE_HEIGHT / 2 - PHONE_WIDTH / 24, card.width, PHONE_WIDTH / 12);
+  }
 
   EndDrawing();
 }
@@ -253,6 +297,9 @@ void quit()
   UnloadSound(goodSound);
   UnloadSound(badSound);
   UnloadFont(textFont);
+  UnloadTexture(backgroundTexture);
+  UnloadTexture(rectTexture);
+  UnloadTexture(cardTexture);
 
   if (score > highScore)
   {
@@ -267,7 +314,8 @@ void quit()
 
 void renderCard()
 {
-  DrawRectangleRec(card, GRAY);
+  Rectangle sourceRec = {0, 0, cardTexture.width, cardTexture.height};
+  DrawTexturePro(cardTexture, sourceRec, card, (Vector2){0, 0}, 0, WHITE);
 
   int lectureID;
   switch (selectedInfo / 10)
@@ -311,7 +359,7 @@ void renderCard()
       break;
   }
 
-  drawWrapedText(infoText, card.x + card.width / 20, card.y + card.height / 2, card.width / 20 * 18, PHONE_WIDTH / 24);
+  drawWrapedText(infoText, card.x + card.width / 12, card.y + card.width / 12, card.width / 12 * 10.5, PHONE_WIDTH / 16);
 
 }
 
@@ -320,9 +368,10 @@ void drawWrapedText(char *text, int x, int y, int w, int fontSize)
 
   if (strlen(text) <= 0) return;
 
-  int charWidth = fontSize / 16 * 11; //rough aproximation
   int row       = 0;
   int nextX     = x;
+
+  Vector2 spaceSize = MeasureTextEx(textFont, " ", fontSize, 1);
 
   char textCopy[120] = {'\0'};
   strcpy(textCopy, text);
@@ -330,15 +379,52 @@ void drawWrapedText(char *text, int x, int y, int w, int fontSize)
   char *currentWord = strtok(textCopy, " ");
   while (currentWord != NULL)
   {
-    if (nextX + strlen(currentWord) * charWidth > x + w && nextX != 0) //wrap the text
+    /*strcat(currentWord, " ");*/
+    Vector2 wordSize = MeasureTextEx(textFont, currentWord, fontSize, 1);
+    if (nextX + wordSize.x > x + w && nextX != 0) //wrap the text
     {
       nextX = x;
       row++;
     }
-    DrawTextEx(textFont, currentWord, (Vector2){nextX, y + row * fontSize}, fontSize, 1, BLACK);
-    nextX += strlen(currentWord) * charWidth;
+    DrawTextEx(textFont, currentWord, (Vector2){nextX, y + row * fontSize}, fontSize, 1, WHITE);
+    nextX += wordSize.x + spaceSize.x;
     currentWord = strtok(NULL, " ");
   }
+}
+
+void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize)
+{
+  if (strlen(text) <= 0) return;
+
+  int row = 0;
+
+  char textCopy[120];
+  strcpy(textCopy, text);
+
+  char *nextWord = strtok(textCopy, " ");
+  char textToDraw[120] = "";
+
+  Vector2 nextWordSize   = MeasureTextEx(textFont, nextWord  , fontSize, 1);
+  Vector2 textToDrawSize = MeasureTextEx(textFont, textToDraw, fontSize, 1);
+  do
+  {
+    while (nextWord && textToDrawSize.x + nextWordSize.x <= w) {
+      strcat(textToDraw, nextWord);
+      nextWord = strtok(NULL, " ");
+      if (nextWord) strcat(textToDraw, " ");
+      textToDrawSize = MeasureTextEx(textFont, textToDraw, fontSize, 1);
+      nextWordSize   = MeasureTextEx(textFont, nextWord  , fontSize, 1);
+    }
+
+    DrawTextEx(textFont, textToDraw, (Vector2){x + w / 2 - textToDrawSize.x / 2, y + row * fontSize}, fontSize, 1, WHITE);
+    row++;
+
+    if (nextWord == NULL) continue;
+
+    strcpy(textToDraw, "");
+    textToDrawSize = MeasureTextEx(textFont, textToDraw, fontSize, 1);
+
+  } while(nextWord);
 }
 
 int isScreenTouched()
