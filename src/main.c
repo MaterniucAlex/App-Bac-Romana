@@ -24,6 +24,9 @@ Color scoreColor = BLACK;
 
 int score;
 int highScore;
+int timer;
+int timerStart;
+int maxTime = 5;
 
 enum GameState {
   MAIN_MENU,
@@ -60,8 +63,6 @@ int main()
   }
 
   quit();
-  CloseAudioDevice();
-  CloseWindow();
 
   return 0;
 }
@@ -96,6 +97,7 @@ void init()
   secondLecture--;
 
   selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+  timer = 10;
 
   startButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
   pauseButton = createButton(PHONE_WIDTH / 12 * 11, 0, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
@@ -120,11 +122,26 @@ int isScreenTouched();
 void update()
 {
 
+  /*int deltaTime = GetFrameTime();*/
+
   switch (currentState) 
   {
     case GAME:
       if (isButtonPressed(pauseButton))
         currentState = PAUSED;
+
+      timer = GetTime() - timerStart;
+
+      if (timer >= maxTime)
+      {
+        score -= 10;
+        timerStart = GetTime();
+        selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+        swipeDistanceX = 0;
+        swipeDistanceY = 0;
+
+        break;
+      }
 
       if (isScreenTouched() && (startSwipeX == 0 && startSwipeY == 0))
       {
@@ -166,6 +183,7 @@ void update()
        PlaySound(badSound);
 
       score += answerPoints;
+      timerStart = GetTime();
       selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
       swipeDistanceX = 0;
       swipeDistanceY = 0;
@@ -185,7 +203,10 @@ void update()
       break;
     case MAIN_MENU:
       if (isScreenTouched() && isButtonPressed(startButton))
+      {
         currentState = GAME;
+        timerStart = GetTime();
+      }
       break;
   }
 
@@ -215,6 +236,10 @@ void render()
   drawWrapedText(listLectures[secondLecture].titlu, PHONE_WIDTH / 100 * 90, PHONE_HEIGHT / 2, PHONE_WIDTH / 5, PHONE_HEIGHT / 50);
   drawWrapedText(listLectures[thirdLecture] .titlu, PHONE_WIDTH / 2, PHONE_HEIGHT / 35 * 33, PHONE_WIDTH / 5, PHONE_HEIGHT / 50);
 
+  char timeStr[6];
+  snprintf(timeStr, 6, "%d", maxTime - timer);
+  DrawText(timeStr, 0, 0, 24, BLACK);
+
   drawButton(pauseButton, YELLOW);
   DrawText(TextFormat("%d", score), PHONE_WIDTH / 2, PHONE_HEIGHT / 20, PHONE_WIDTH / 8, scoreColor);
   if (currentState == PAUSED)
@@ -235,6 +260,9 @@ void quit()
     snprintf(scoreStr, 6, "%d", score);
     SaveFileText("savedata/highScore.sv", scoreStr);
   }
+
+  CloseAudioDevice();
+  CloseWindow();
 }
 
 void renderCard()

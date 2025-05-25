@@ -115,6 +115,9 @@ javac -verbose -source 1.8 -target 1.8 -d android/build/obj \
 $BUILD_TOOLS/dx --verbose --dex --output=android/build/dex/classes.dex android/build/obj
 
 # Add resources and assets to APK
+
+echo "000" | cat - > ./assets/savedata/highScore.sv
+
 $BUILD_TOOLS/aapt package -f \
 	-M android/build/AndroidManifest.xml -S android/build/res -A assets \
 	-I android/sdk/platforms/android-29/android.jar -F game.apk android/build/dex
