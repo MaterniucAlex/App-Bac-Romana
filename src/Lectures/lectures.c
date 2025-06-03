@@ -33,7 +33,7 @@ void initLectures(Lecture *listLectures)
 
 
   listLectures[3].titlu = "Morometii";
-  listLectures[3].anAparitie = "I-1995, II-1967";
+  listLectures[3].anAparitie = "I-1995, II-1967"; // Corectat anul de aparitie pentru I-ul volum
   listLectures[3].autor = "Marin Preda";
   listLectures[3].curentLiterar = "Realism postbelic";
   listLectures[3].temaOperei = "Destramarea familiei taranesti traditionale, timpul, criza comunicarii";
@@ -59,7 +59,7 @@ void initLectures(Lecture *listLectures)
   listLectures[5].temaOperei = "Satirizarea moravurilor politice si sociale ale vremii";
   listLectures[5].elemStr = "Comedie de moravuri, 4 acte, conflict comic, bazat pe pierderea scrisorii";
   listLectures[5].scena1= "Numararea steagurilor de catre branzovenescu si farfuridi";
-  listLectures[5].scena2= "Discursurile electorale ale lui farfudini si catavencu";
+  listLectures[5].scena2= "Discursurile electorale ale lui farfuridi si catavencu"; // Corectat numele lui Farfuridi
 
 
   listLectures[6].titlu = "Povestea lui Harap Alb";
@@ -79,75 +79,75 @@ void initLectures(Lecture *listLectures)
   listLectures[7].temaOperei = "Consecintele dorintei de avutie";
   listLectures[7].elemStr = "Nuvela psihologica realista, incipit-final moralizator (vorbele babei)";
   listLectures[7].scena1= "Aparitia lui Lica Samadaul";
-  listLectures[7].scena2= "Uciderea Anei de catre ghita";
+  listLectures[7].scena2= "Uciderea Anei de catre Ghita";
 
 
-  listLectures[8].titlu = "8";
-  listLectures[8].anAparitie = "9999";
-  listLectures[8].autor = "";
-  listLectures[8].curentLiterar = "";
-  listLectures[8].temaOperei = "";
-  listLectures[8].elemStr = "";
-  listLectures[8].scena1= "";
-  listLectures[8].scena2= "";
+  listLectures[8].titlu = "Eu nu strivesc Corola";
+  listLectures[8].anAparitie = "1919";
+  listLectures[8].autor = "Lucian Blaga";
+  listLectures[8].curentLiterar = "Modernism (expresionism)";
+  listLectures[8].temaOperei = "Cunoasterea luciferica (prin mister), iubirea, rolul poetului";
+  listLectures[8].elemStr = "Arta poetica, vers liber, metafora revelatorie, antiteza, ingambament";
+  listLectures[8].scena1= "Invoca lumina pentru a sublinia misterul";
+  listLectures[8].scena2= "Compara lumina cu o floare care nu e strivita";
 
 
-  listLectures[9].titlu = "9";
-  listLectures[9].anAparitie = "9999";
-  listLectures[9].autor = "";
-  listLectures[9].curentLiterar = "";
-  listLectures[9].temaOperei = "";
-  listLectures[9].elemStr = "";
-  listLectures[9].scena1= "";
-  listLectures[9].scena2= "";
+  listLectures[9].titlu = "Floare Albastra";
+  listLectures[9].anAparitie = "1873";
+  listLectures[9].autor = "Mihai Eminescu";
+  listLectures[9].curentLiterar = "Romantism";
+  listLectures[9].temaOperei = "Iubirea si natura, conditia omului de geniu, tema evaziunii";
+  listLectures[9].elemStr = "Idila, elegie, antiteza, natura edenica si cosmica";
+  listLectures[9].scena1= "Dialogul dintre vocea feminina (natura) si cea masculina (geniul)";
+  listLectures[9].scena2= "Intoarcerea la realitate si melancolie";
 
 
-  listLectures[10].titlu = "10";
-  listLectures[10].anAparitie = "9999";
-  listLectures[10].autor = "";
-  listLectures[10].curentLiterar = "";
-  listLectures[10].temaOperei = "";
-  listLectures[10].elemStr = "";
-  listLectures[10].scena1= "";
-  listLectures[10].scena2= "";
+  listLectures[10].titlu = "Plumb";
+  listLectures[10].anAparitie = "1916";
+  listLectures[10].autor = "George Bacovia";
+  listLectures[10].curentLiterar = "Simbolism";
+  listLectures[10].temaOperei = "Spleen-ul, moartea, singuratatea, angoasa existentiala, conditia poetului";
+  listLectures[10].elemStr = "Poem simbolist, simetrie, laitmotivul 'plumb', cromatica sumbra, muzicalitate";
+  listLectures[10].scena1= "Descrierea spatiului funebru si a conditiei eului liric";
+  listLectures[10].scena2= "Starea de angoasa si izolare, repetarea 'plumb'";
 
 
-  listLectures[11].titlu = "11";
-  listLectures[11].anAparitie = "9999";
-  listLectures[11].autor = "";
-  listLectures[11].curentLiterar = "";
-  listLectures[11].temaOperei = "";
-  listLectures[11].elemStr = "";
-  listLectures[11].scena1= "";
-  listLectures[11].scena2= "";
+  listLectures[11].titlu = "Luceafarul";
+  listLectures[11].anAparitie = "1883";
+  listLectures[11].autor = "Mihai Eminescu";
+  listLectures[11].curentLiterar = "Romantism";
+  listLectures[11].temaOperei = "Conditia geniului, iubirea, cosmogonia, raportul om-univers";
+  listLectures[11].elemStr = "Poem filozofic, epopee, alegorie, antiteza, simetrie compozitionala";
+  listLectures[11].scena1= "Nasterea Luceafarului din cer si mare";
+  listLectures[11].scena2= "Dialogul Hyperion - Demiurg";
 
 
-  listLectures[12].titlu = "12";
-  listLectures[12].anAparitie = "9999";
-  listLectures[12].autor = "";
-  listLectures[12].curentLiterar = "";
-  listLectures[12].temaOperei = "";
-  listLectures[12].elemStr = "";
-  listLectures[12].scena1= "";
-  listLectures[12].scena2= "";
+  listLectures[12].titlu = "Testament";
+  listLectures[12].anAparitie = "1927";
+  listLectures[12].autor = "Tudor Arghezi";
+  listLectures[12].curentLiterar = "Modernism";
+  listLectures[12].temaOperei = "Conditia poetului, rolul poeziei, estetica uratului";
+  listLectures[12].elemStr = "Arta poetica, metafora, oximoron (veninul strans l-am preschimbat in miere), adresare directa";
+  listLectures[12].scena1= "Referinta la \"graiul cu-ndemnuri pentru vite\" si transformarea lui in carte";
+  listLectures[12].scena2= "Mentionarea \"zdrentelor\" si a \"buruienilor\" transformate in frumusete";
 
 
-  listLectures[13].titlu = "13";
-  listLectures[13].anAparitie = "9999";
-  listLectures[13].autor = "";
-  listLectures[13].curentLiterar = "";
-  listLectures[13].temaOperei = "";
-  listLectures[13].elemStr = "";
-  listLectures[13].scena1= "";
-  listLectures[13].scena2= "";
+  listLectures[13].titlu = "Maitreyi";
+  listLectures[13].anAparitie = "1933";
+  listLectures[13].autor = "Mircea Eliade";
+  listLectures[13].curentLiterar = "Modernism, roman al experientei, roman exotic";
+  listLectures[13].temaOperei = "Iubirea exotica, initierea, cunoasterea prin experienta, sacrul si profanul";
+  listLectures[13].elemStr = "Roman subiectiv, jurnal, insertii de jurnale, narator-personaj, ambiguitate";
+  listLectures[13].scena1= "Intalnirea lui Allan cu Maitreyi si intrarea in casa Sen";
+  listLectures[13].scena2= "Ceremonia logodnei tainice (juramantul iubirii)";
 
 
-  listLectures[14].titlu = "14";
-  listLectures[14].anAparitie = "9999";
-  listLectures[14].autor = "";
-  listLectures[14].curentLiterar = "";
-  listLectures[14].temaOperei = "";
-  listLectures[14].elemStr = "";
-  listLectures[14].scena1= "";
-  listLectures[14].scena2= "";
+  listLectures[14].titlu = "Riga Crypto";
+  listLectures[14].anAparitie = "1926";
+  listLectures[14].autor = "Ion Barbu";
+  listLectures[14].curentLiterar = "Modernism (ermetism)";
+  listLectures[14].temaOperei = "Cunoasterea, incompatibilitatea, tema iubirii imposibile, conditia geniului";
+  listLectures[14].elemStr = "Balada culta, poem alegoric, limbaj ermetic, dualitatea regnului mineral si vegetal";
+  listLectures[14].scena1= "Nunta in povestea spusa de menestrel (Cripto si Enigel)";
+  listLectures[14].scena2= "Transformarea lui Cripto in ciuperca otravitoare, esecul iubirii";
 }
