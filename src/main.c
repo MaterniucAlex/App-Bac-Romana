@@ -75,17 +75,18 @@ void init()
 {
   srand(time(NULL));
 
+  #ifdef PHONE
+  MaximizeWindow();
+  ToggleBorderlessWindowed();
+  PHONE_WIDTH  = GetMonitorWidth ();
+  PHONE_HEIGHT = GetMonitorHeight();
+  #endif
+
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
   ChangeDirectory("assets");
   textFont = LoadFont("fonts/font.ttf");
   SetTextureFilter(textFont.texture, TEXTURE_FILTER_TRILINEAR);
 
-  #ifdef PHONE
-  MaximizeWindow();
-  ToggleBorderlessWindowed();
-  PHONE_WIDTH  = GetScreenWidth ();
-  PHONE_HEIGHT = GetScreenHeight();
-  #endif
 
   InitAudioDevice();
   SetTargetFPS(60);
@@ -151,11 +152,15 @@ void update()
         PlaySound(badSound);
         timerStart = GetTime();
         selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+        startSwipeY = 0;
+        startSwipeX = 0;
         swipeDistanceX = 0;
         swipeDistanceY = 0;
+        overlayColor = (Color){0xBB, 0x00, 0x00, 0xBB};
 
         break;
       }
+
 
       if (isScreenTouched() && (startSwipeX == 0 && startSwipeY == 0))
       {
@@ -170,7 +175,6 @@ void update()
         startSwipeX = 0;
         startSwipeY = 0;
       }
-
 
       //cancel swipe action if swipe was too small or if the user swiped up
       if (abs(swipeDistanceX) < PHONE_WIDTH / 10 && swipeDistanceY < PHONE_WIDTH / 10) break;
@@ -236,6 +240,7 @@ void update()
 }
 
 void drawWrapedText(char *text, int x, int y, int w, int fontSize);
+void drawCardInfoText(char *text, Rectangle cardDrawRect, int fontSize, int rotation);
 void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize);
 void renderCard();
 void render()
@@ -335,7 +340,22 @@ void quit()
 void renderCard()
 {
   Rectangle sourceRec = {0, 0, cardTexture.width, cardTexture.height};
-  DrawTexturePro(cardTexture, sourceRec, card, (Vector2){0, 0}, 0, WHITE);
+  Rectangle cardDrawRect = {-1, -1, card.width, card.height};
+
+  int cardRotation = 0;
+  if (startSwipeX != 0 && startSwipeY != 0)
+  {
+    cardDrawRect.x = card.x - (startSwipeX - GetTouchX()) * 2 + card.width / 2;
+    cardDrawRect.y = card.y - (startSwipeY - GetTouchY()) * 2 + card.height / 2;
+    cardRotation = (GetTouchX() - startSwipeX) / 6;
+  }
+  else
+  {
+    cardDrawRect.x = card.x + card.width  / 2;
+    cardDrawRect.y = card.y + card.height / 2;
+  }
+  DrawTexturePro(cardTexture, sourceRec, card, (Vector2){0, 0}, 0, GRAY);
+  DrawTexturePro(cardTexture, sourceRec, cardDrawRect, (Vector2){card.width / 2, card.height / 2}, cardRotation, WHITE);
 
   int lectureID;
   switch (selectedInfo / 10)
@@ -379,7 +399,7 @@ void renderCard()
       break;
   }
 
-  drawWrapedText(infoText, card.x + card.width / 12, card.y + card.width / 12, card.width / 12 * 10.5, PHONE_WIDTH / 16);
+  drawCardInfoText(infoText, cardDrawRect, PHONE_WIDTH / 16, cardRotation);
 
 }
 
@@ -410,6 +430,55 @@ void drawWrapedText(char *text, int x, int y, int w, int fontSize)
     nextX += wordSize.x + spaceSize.x;
     currentWord = strtok(NULL, " ");
   }
+}
+
+void drawCardInfoText(char *text, Rectangle cardDrawRect, int fontSize, int rotation)
+{
+
+  if (strlen(text) <= 0) return;
+
+  int nextX     = card.x + card.width / 12;
+
+  char textCopy[120] = {'\0'};
+  strcpy(textCopy, text);
+
+  char word[20] = {'\0'};
+
+  int wordNext = 0;
+  for(int i = 0; i < strlen(textCopy); i++)
+  {
+    if (textCopy[i] != ' ')
+    {
+      word[wordNext] = textCopy[i];
+      wordNext++;
+      if (wordNext >= 20) wordNext = 0;
+      continue;
+    }
+
+    Vector2 wordSize = MeasureTextEx(textFont, word, fontSize, 1);
+    if (nextX + wordSize.x >= card.x + card.width - card.width / 12 && nextX != card.x + card.width / 12)
+    {
+      textCopy[i - strlen(word) - 1] = '\n';
+      nextX = card.x + card.width / 12;
+    }
+
+    wordNext = 0;
+    for(int i = 0; i < 20; word[i++] = '\0');
+
+    nextX += wordSize.x;
+  }
+
+  Vector2 wordSize = MeasureTextEx(textFont, word, fontSize, 1);
+  if (nextX + wordSize.x >= card.x + card.width - card.width / 12 && nextX != card.x + card.width / 12)
+  {
+    textCopy[strlen(textCopy) - strlen(word) - 1] = '\n';
+    nextX = card.x + card.width / 12;
+  }
+
+  DrawTextPro(textFont, textCopy,
+              (Vector2){cardDrawRect.x + cardDrawRect.width / 12, cardDrawRect.y + cardDrawRect.width / 12},
+              (Vector2){cardDrawRect.width / 2, cardDrawRect.height / 2},
+              rotation, fontSize, 1, WHITE);
 }
 
 void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize)
