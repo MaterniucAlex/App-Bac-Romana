@@ -3,4 +3,4 @@ game.apk
 App
 android/
 .token
-assets/savedata/*
+assets/savedata/highScore.sv

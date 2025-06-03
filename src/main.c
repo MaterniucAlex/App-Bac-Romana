@@ -6,8 +6,14 @@
 #include "Button/Button.h"
 #include "Lectures/lectures.h"
 
+
+#ifdef PHONE 
+int PHONE_WIDTH  = 1080;
+int PHONE_HEIGHT = 2340;
+#else
 int PHONE_WIDTH  = 1080 / 2.5;
 int PHONE_HEIGHT = 2412 / 2.5;
+#endif
 
 Font textFont;
 
@@ -75,18 +81,10 @@ void init()
 {
   srand(time(NULL));
 
-  #ifdef PHONE
-  MaximizeWindow();
-  ToggleBorderlessWindowed();
-  PHONE_WIDTH  = GetMonitorWidth ();
-  PHONE_HEIGHT = GetMonitorHeight();
-  #endif
-
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
   ChangeDirectory("assets");
   textFont = LoadFont("fonts/font.ttf");
   SetTextureFilter(textFont.texture, TEXTURE_FILTER_TRILINEAR);
-
 
   InitAudioDevice();
   SetTargetFPS(60);
@@ -156,7 +154,7 @@ void update()
         startSwipeX = 0;
         swipeDistanceX = 0;
         swipeDistanceY = 0;
-        overlayColor = (Color){0xBB, 0x00, 0x00, 0xBB};
+        overlayColor = (Color){0xBB, 0x00, 0x00, 0x77};
 
         break;
       }
@@ -197,12 +195,12 @@ void update()
 
       if (answerPoints > 0)
       {
-        overlayColor = (Color){0x00, 0x88, 0x00, 0xBB};
+        overlayColor = (Color){0x00, 0xBD, 0x00, 0x69};
         PlaySound(goodSound);
       }
       else
       {
-        overlayColor = (Color){0xBB, 0x00, 0x00, 0xBB};
+        overlayColor = (Color){0xBB, 0x00, 0x00, 0x77};
         PlaySound(badSound);
       }
 
