@@ -39,6 +39,9 @@ Sound badSound;
 Texture2D backgroundTexture;
 Texture2D rectTexture;
 Texture2D cardTexture;
+Texture2D pauseTexture;
+
+Color overlayColor = (Color){0x00, 0xBB, 0x00, 0x00};
 
 Lecture listLectures[15];
 
@@ -74,7 +77,7 @@ void init()
 
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
   ChangeDirectory("assets");
-  textFont = LoadFont("fonts/0xProtoNerdFontMono-Regular.ttf");
+  textFont = LoadFont("fonts/font.ttf");
   SetTextureFilter(textFont.texture, TEXTURE_FILTER_TRILINEAR);
 
   #ifdef PHONE
@@ -99,15 +102,15 @@ void init()
   secondLecture--;
 
   selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
-  timer = 10;
+  timer = 5;
 
   startButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
-  pauseButton = createButton(PHONE_WIDTH / 12 * 11, 0, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
+  pauseButton = createButton(PHONE_WIDTH / 36 * 35 - PHONE_WIDTH / 12, PHONE_WIDTH / 36, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
 
   card.width = PHONE_WIDTH / 1.5;
-  card.height = card.width / 2 * 3;
+  card.height = card.width / 3 * 4;
   card.x = (PHONE_WIDTH - card.width) / 2;
-  card.y = (PHONE_HEIGHT - card.height) / 2;
+  card.y = (PHONE_HEIGHT - card.height) / 4 * 3;
 
   char *fileData = LoadFileText("savedata/highScore.sv");
   highScore = atoi(fileData);
@@ -119,6 +122,7 @@ void init()
   backgroundTexture = LoadTexture("img/bg.png");
   rectTexture       = LoadTexture("img/rect.png");
   cardTexture       = LoadTexture("img/card.png");
+  pauseTexture      = LoadTexture("img/pause.png");
 }
 
 int swipeDistanceX = 0;
@@ -135,6 +139,10 @@ void update()
       if (isButtonPressed(pauseButton))
         currentState = PAUSED;
 
+      if (maxTime - timer != maxTime - (int)GetTime() + timerStart && maxTime - (int)GetTime() + timerStart != 5)
+      {
+        overlayColor.a = 0x00;
+      }
       timer = GetTime() - timerStart;
 
       if (timer >= maxTime)
@@ -184,9 +192,15 @@ void update()
         answerPoints = maxTime - timer;
 
       if (answerPoints > 0)
+      {
+        overlayColor = (Color){0x00, 0x88, 0x00, 0xBB};
         PlaySound(goodSound);
+      }
       else
+      {
+        overlayColor = (Color){0xBB, 0x00, 0x00, 0xBB};
         PlaySound(badSound);
+      }
 
       score += answerPoints;
       timerStart = GetTime();
@@ -254,7 +268,7 @@ void render()
 
     Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
 
-    DrawTextEx(textFont, text, (Vector2){(card.x - titleCharSize.x) / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize * i}, titleFontSize, 1,  WHITE);
+    DrawTextEx(textFont, text, (Vector2){(card.x - titleCharSize.x) / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1,  WHITE);
 
   }
 
@@ -267,7 +281,7 @@ void render()
 
     Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
 
-    DrawTextEx(textFont, text, (Vector2){card.x + card.width + (PHONE_WIDTH - card.x - card.width) / 2 - titleCharSize.x / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize * i}, titleFontSize, 1, WHITE);
+    DrawTextEx(textFont, text, (Vector2){card.x + card.width + (PHONE_WIDTH - card.x - card.width) / 2 - titleCharSize.x / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1, WHITE);
 
   }
 
@@ -277,7 +291,7 @@ void render()
   snprintf(timeStr, 6, "%d", maxTime - timer);
   drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 8, card.width, PHONE_WIDTH / 12);
 
-  drawButton(pauseButton, YELLOW);
+  drawButtonTexture(pauseButton, &pauseTexture);
 
   char scoreStr[6];
   snprintf(scoreStr, 6, "%d", score);
@@ -287,6 +301,11 @@ void render()
   {
     DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, (Color){0x00, 0x00, 0x00, 0xAA});
     drawTextInMiddleWrapped("Paused", card.x, PHONE_HEIGHT / 2 - PHONE_WIDTH / 24, card.width, PHONE_WIDTH / 12);
+  }
+
+  if (overlayColor.a != 0x00)
+  {
+    DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, overlayColor);
   }
 
   EndDrawing();
@@ -300,6 +319,7 @@ void quit()
   UnloadTexture(backgroundTexture);
   UnloadTexture(rectTexture);
   UnloadTexture(cardTexture);
+  UnloadTexture(pauseTexture);
 
   if (score > highScore)
   {

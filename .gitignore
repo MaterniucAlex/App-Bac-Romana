@@ -3,3 +3,4 @@ game.apk
 App
 android/
 .token
+assets/savedata/*
