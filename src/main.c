@@ -29,6 +29,8 @@ int PHONE_HEIGHT = 2340 / 2.5;
 
 Font textFont;
 
+int firstTimePlaying = 1;
+
 //for swipe motion logic
 int startSwipeX = 0;
 int startSwipeY = 0;
@@ -73,6 +75,11 @@ Texture2D backgroundTexture;
 Texture2D rectTexture;
 Texture2D cardTexture;
 Texture2D exitTexture;
+Texture2D pointerTexture;
+Texture2D pointerTexture2;
+
+int pointerX;
+int pointerIncrement;
 
 Color overlayColor = (Color){0x00, 0xBB, 0x00, 0x00};
 
@@ -137,10 +144,12 @@ void init()
   goodSound = LoadSound("sounds/good.wav");
   badSound  = LoadSound("sounds/bad.wav");
 
-  backgroundTexture = LoadTexture("img/bg.png");
-  rectTexture       = LoadTexture("img/rect.png");
-  cardTexture       = LoadTexture("img/card.png");
-  exitTexture      = LoadTexture("img/pause.png");
+  backgroundTexture   = LoadTexture("img/bg.png");
+  rectTexture         = LoadTexture("img/rect.png");
+  cardTexture         = LoadTexture("img/card.png");
+  exitTexture         = LoadTexture("img/pause.png");
+  pointerTexture      = LoadTexture("img/pointer.png");
+  pointerTexture2      = LoadTexture("img/pointer2.png");
 }
 
 int swipeDistanceX = 0;
@@ -193,13 +202,14 @@ void update()
           break;
         }
 
-        selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
-        timer = 5;
+        if (firstTimePlaying) selectedInfo = 21;
+        else selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
 
         score = 0;
 
         currentState = GAME;
         timerStart = GetTime();
+        timer = GetTime();
       }
       if (isButtonPressed(&optionsButton))
       {
@@ -217,6 +227,16 @@ void update()
       }
       break;
     case GAME:
+      if (firstTimePlaying)
+      {
+        if (pointerX >= PHONE_WIDTH / 4)
+          pointerIncrement = -PHONE_WIDTH / 100;
+        if (pointerX <= 0)
+          pointerIncrement = PHONE_WIDTH / 200;
+        
+
+        pointerX += pointerIncrement;
+      }
       if (isButtonPressed(&exitButton))
       {
         currentState = MAIN_MENU;
@@ -229,7 +249,8 @@ void update()
       {
         overlayColor.a = 0x00;
       }
-      timer = GetTime() - timerStart;
+      if (!firstTimePlaying)
+        timer = GetTime() - timerStart;
 
       if (timer >= maxTime)
       {
@@ -267,6 +288,8 @@ void update()
       if (abs(swipeDistanceX) < PHONE_WIDTH / 10 && swipeDistanceY < PHONE_WIDTH / 10) break;
 
       int answerPoints = -10;
+
+      if (firstTimePlaying) firstTimePlaying = 0;
 
       //see which swipe was bigger and use that
       if (abs(swipeDistanceX) > abs(swipeDistanceY))
@@ -359,6 +382,15 @@ void render()
       if (overlayColor.a != 0x00)
       {
         DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, overlayColor);
+      }
+
+      if (firstTimePlaying)
+      {
+        Rectangle sourceRec = {0, 0, pointerTexture.width, pointerTexture.height};
+        if (pointerIncrement > 0)
+          DrawTexturePro(pointerTexture, sourceRec, (Rectangle){PHONE_WIDTH / 2 + pointerX, card.y + card.height / 2 - pointerX / 2, PHONE_WIDTH / 10, PHONE_WIDTH / 10}, (Vector2){0, 0}, 0, WHITE);
+        else
+          DrawTexturePro(pointerTexture2, sourceRec, (Rectangle){PHONE_WIDTH / 2 + pointerX, card.y + card.height / 2 - pointerX / 2, PHONE_WIDTH / 10, PHONE_WIDTH / 10}, (Vector2){0, 0}, 0, WHITE);
       }
   }
   EndDrawing();
@@ -582,6 +614,8 @@ void quit()
   UnloadTexture(rectTexture);
   UnloadTexture(cardTexture);
   UnloadTexture(exitTexture);
+  UnloadTexture(pointerTexture);
+  UnloadTexture(pointerTexture2);
 
   if (score > highScore)
   {
