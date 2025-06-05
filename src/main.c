@@ -4,15 +4,27 @@
 #include <string.h>
 #include "raylib.h"
 #include "Button/Button.h"
+#include "Button/ToggleButton.h"
 #include "Lectures/lectures.h"
 
+/*
+ * Before anyone else tries to read this code I must say I apologise
+ * This could have been written much better if I had a structure in mind in the first place
+ * Or if I didn't work on this project exclusively at 1AM
+ *
+ * Either way, this code is horendous, I am ashamed of it, but it works
+ * The logic is pretty alright, if you can ignore the awful structure of it 
+ *
+ * I may revisit this at some point, but we may see if that happens
+ *
+*/
 
 #ifdef PHONE 
 int PHONE_WIDTH  = 1080;
 int PHONE_HEIGHT = 2340;
 #else
 int PHONE_WIDTH  = 1080 / 2.5;
-int PHONE_HEIGHT = 2412 / 2.5;
+int PHONE_HEIGHT = 2340 / 2.5;
 #endif
 
 Font textFont;
@@ -21,8 +33,23 @@ Font textFont;
 int startSwipeX = 0;
 int startSwipeY = 0;
 
+int selectableLectures = 11;
+int selectableInfo = 4;
+
 Button startButton;
-Button pauseButton;
+Button optionsButton;
+Button mainMenuButton;
+Button exitButton;
+
+ToggleButton lecturesButtonList[15];
+
+Lecture listLectures[15];
+
+int firstLecture;
+int secondLecture;
+int thirdLecture;
+
+int selectedInfo;
 
 Rectangle card;
 
@@ -34,8 +61,8 @@ int maxTime = 5;
 
 enum GameState {
   MAIN_MENU,
+  OPTIONS,
   GAME,
-  PAUSED
 };
 
 enum GameState currentState;
@@ -45,17 +72,10 @@ Sound badSound;
 Texture2D backgroundTexture;
 Texture2D rectTexture;
 Texture2D cardTexture;
-Texture2D pauseTexture;
+Texture2D exitTexture;
 
 Color overlayColor = (Color){0x00, 0xBB, 0x00, 0x00};
 
-Lecture listLectures[15];
-
-int firstLecture;
-int secondLecture;
-int thirdLecture;
-
-int selectedInfo;
 
 void init();
 void update();
@@ -84,7 +104,7 @@ void init()
   InitWindow(PHONE_WIDTH, PHONE_HEIGHT, "Bac Romana");
   ChangeDirectory("assets");
   textFont = LoadFont("fonts/font.ttf");
-  SetTextureFilter(textFont.texture, TEXTURE_FILTER_TRILINEAR);
+  SetTextureFilter(textFont.texture, TEXTURE_FILTER_POINT);
 
   InitAudioDevice();
   SetTargetFPS(60);
@@ -92,19 +112,18 @@ void init()
 
   initLectures(listLectures);
 
-   firstLecture = rand() % (15 / 3) + 1;
-  secondLecture = rand() % ((15 / 3) * 2 - firstLecture) + firstLecture + 1;
-   thirdLecture = rand() % (15 - secondLecture) + secondLecture;
+  startButton   = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
+  optionsButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
+  mainMenuButton= createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 4 * 3 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 6);
+  exitButton   = createButton(PHONE_WIDTH / 36 * 35 - PHONE_WIDTH / 12, PHONE_WIDTH / 36, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
 
-  //this is to prevent the edge case where all 3 select the lecture with id 0
-   firstLecture--;
-  secondLecture--;
-
-  selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
-  timer = 5;
-
-  startButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
-  pauseButton = createButton(PHONE_WIDTH / 36 * 35 - PHONE_WIDTH / 12, PHONE_WIDTH / 36, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
+  for(int i = 0; i < 15; i++)
+  {
+    lecturesButtonList[i] = createToggleButton(PHONE_WIDTH / 20, PHONE_WIDTH / 20 * (1 + i) + PHONE_WIDTH / 21 * i, PHONE_WIDTH / 14, PHONE_WIDTH / 14);
+  }
+  lecturesButtonList[0].isToggled = 1;
+  lecturesButtonList[1].isToggled = 1;
+  lecturesButtonList[2].isToggled = 1;
 
   card.width = PHONE_WIDTH / 1.5;
   card.height = card.width / 3 * 4;
@@ -121,12 +140,41 @@ void init()
   backgroundTexture = LoadTexture("img/bg.png");
   rectTexture       = LoadTexture("img/rect.png");
   cardTexture       = LoadTexture("img/card.png");
-  pauseTexture      = LoadTexture("img/pause.png");
+  exitTexture      = LoadTexture("img/pause.png");
 }
 
 int swipeDistanceX = 0;
 int swipeDistanceY = 0;
 int isScreenTouched();
+
+int selectLectures()
+{
+
+  selectableLectures = 0;
+  for(int i = 0; i < 15; i++)
+    if (lecturesButtonList[i].isToggled) selectableLectures++;
+
+  if (selectableLectures < 3) return 0;
+
+  int  firstLectureId = rand() % (selectableLectures / 3) + 1;
+  int secondLectureId = rand() % ((selectableLectures / 3) * 2 - firstLectureId) + firstLectureId + 1;
+  int  thirdLectureId = rand() % (selectableLectures - secondLectureId) + secondLectureId;
+
+  //this is to prevent the edge case where all 3 select the lecture with id 0
+  firstLectureId--;
+  secondLectureId--;
+
+  for(int i = 0, k = -1; i < 15; i++)
+  {
+    if (lecturesButtonList[i].isToggled) k++;
+    if (k == firstLectureId)   firstLecture = i;
+    if (k == secondLectureId) secondLecture = i;
+    if (k == thirdLectureId){  thirdLecture = i; i = 15;}
+  }
+
+  return 1;
+}
+
 void update()
 {
 
@@ -134,9 +182,48 @@ void update()
 
   switch (currentState) 
   {
+    default: break;
+    case MAIN_MENU:
+      if (isButtonPressed(&startButton))
+      {
+
+        if (selectLectures() == 0) 
+        {
+          PlaySound(badSound);
+          break;
+        }
+
+        selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+        timer = 5;
+
+        score = 0;
+
+        currentState = GAME;
+        timerStart = GetTime();
+      }
+      if (isButtonPressed(&optionsButton))
+      {
+        currentState = OPTIONS;
+      }
+      break;
+    case OPTIONS:
+      if (isButtonPressed(&mainMenuButton))
+      {
+        currentState = MAIN_MENU;
+      }
+      for(int i = 0; i < 15; i++)
+      {
+        isToggleButtonPressed(&lecturesButtonList[i]);
+      }
+      break;
     case GAME:
-      if (isButtonPressed(pauseButton))
-        currentState = PAUSED;
+      if (isButtonPressed(&exitButton))
+      {
+        currentState = MAIN_MENU;
+        startSwipeX = 0;
+        startSwipeY = 0;
+        break;
+      }
 
       if (maxTime - timer != maxTime - (int)GetTime() + timerStart && maxTime - (int)GetTime() + timerStart != 5)
       {
@@ -160,7 +247,9 @@ void update()
       }
 
 
-      if (isScreenTouched() && (startSwipeX == 0 && startSwipeY == 0))
+      if (isScreenTouched() && (startSwipeX == 0 && startSwipeY == 0) && (
+        GetTouchX() >= card.x && GetTouchX() <= card.x + card.width &&
+        GetTouchY() >= card.y && GetTouchY() <= card.y + card.height))
       {
         startSwipeX = GetTouchX();
         startSwipeY = GetTouchY();
@@ -185,7 +274,7 @@ void update()
         //selectedInfo structure : 2 digit number
         //1st digit : the side where you would have to swipe to for a corrent answer
         //1 = left ; 2 = right ; 3 = down 
-        //2nd digit : the random information shown from the lecture. See the renderCard function bellow.
+        //2nd digit : the random information shown from the lecture. See the drawCard function bellow.
 
         if ((swipeDistanceX > 0 && selectedInfo / 10 == 2) || (swipeDistanceX < 0 && selectedInfo / 10 == 1)) 
           answerPoints = maxTime - timer;
@@ -206,32 +295,10 @@ void update()
 
       score += answerPoints;
       timerStart = GetTime();
-      selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
+      selectedInfo = (rand() % 3 + 1) * 10 + rand() % selectableInfo + 1; 
       swipeDistanceX = 0;
       swipeDistanceY = 0;
 
-      break;
-    case PAUSED:
-
-      if (!isScreenTouched()) break;
-
-      currentState = GAME;
-      timerStart = GetTime() - timer;
-
-      if (score > highScore)
-      {
-        char scoreStr[6];
-        snprintf(scoreStr, 6, "%d", score);
-        SaveFileText("savedata/highScore.sv", scoreStr);
-      }
-
-      break;
-    case MAIN_MENU:
-      if (isScreenTouched() && isButtonPressed(startButton))
-      {
-        currentState = GAME;
-        timerStart = GetTime();
-      }
       break;
   }
 
@@ -240,7 +307,8 @@ void update()
 void drawWrapedText(char *text, int x, int y, int w, int fontSize);
 void drawCardInfoText(char *text, Rectangle cardDrawRect, int fontSize, int rotation);
 void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize);
-void renderCard();
+void drawLecturesSideText();
+void drawCard();
 void render()
 {
   BeginDrawing();
@@ -250,108 +318,66 @@ void render()
   Rectangle destRec   = {0, 0, PHONE_WIDTH, PHONE_HEIGHT};
   DrawTexturePro(backgroundTexture, sourceRec, destRec, (Vector2){0, 0}, 0, WHITE);
 
-  if (currentState == MAIN_MENU)
-  {
-    drawButtonTexture(startButton, &rectTexture);
-    drawTextInMiddleWrapped("Play", startButton.x, startButton.y + startButton.h / 3, startButton.w, startButton.h / 3);
-    EndDrawing();
-    return;
+  switch (currentState) {
+
+    case MAIN_MENU:
+      drawButtonTexture(startButton, &rectTexture);
+      drawTextInMiddleWrapped("Play", startButton.x, startButton.y + startButton.h / 3, startButton.w, startButton.h / 3);
+      drawButtonTexture(optionsButton, &rectTexture);
+      drawTextInMiddleWrapped("Options", optionsButton.x, optionsButton.y + optionsButton.h / 3, optionsButton.w, optionsButton.h / 3);
+      break;
+    case OPTIONS:
+      drawButtonTexture(mainMenuButton, &rectTexture);
+      drawTextInMiddleWrapped("Main Menu", mainMenuButton.x, mainMenuButton.y + mainMenuButton.h / 3, mainMenuButton.w, mainMenuButton.h / 3);
+
+      for(int i = 0; i < 15; i++)
+      {
+        drawToggleButtonTexture(lecturesButtonList[i], &rectTexture);
+        DrawTextPro(textFont, listLectures[i].titlu,
+                    (Vector2){lecturesButtonList[i].x + lecturesButtonList[i].w / 3 * 4, lecturesButtonList[i].y},
+                    (Vector2){0, 0}, 0, lecturesButtonList[i].h, 1, WHITE);
+      }
+
+      break;
+    case GAME:
+      drawCard();
+
+      drawLecturesSideText();
+
+      //time
+      char timeStr[6];
+      snprintf(timeStr, 6, "%d", maxTime - timer);
+      drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 8, card.width, PHONE_WIDTH / 12);
+
+      //score
+      char scoreStr[6];
+      snprintf(scoreStr, 6, "%d", score);
+      drawTextInMiddleWrapped(scoreStr, card.x, PHONE_HEIGHT / 20, card.width, PHONE_WIDTH / 6);
+
+      drawButtonTexture(exitButton, &exitTexture);
+
+      if (overlayColor.a != 0x00)
+      {
+        DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, overlayColor);
+      }
   }
-
-  renderCard();
-
-  char *lectureTitle = listLectures[firstLecture].titlu;
-  int titleFontSize = PHONE_WIDTH / 12;
-
-  for(int i = 0; i < strlen(lectureTitle); i++)
-  {
-    char text[2];
-    text[0] = listLectures[firstLecture].titlu[i];
-    text[1] = '\0';
-
-    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
-
-    DrawTextEx(textFont, text, (Vector2){(card.x - titleCharSize.x) / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1,  WHITE);
-
-  }
-
-  lectureTitle = listLectures[secondLecture].titlu;
-  for(int i = 0; i < strlen(lectureTitle); i++)
-  {
-    char text[2];
-    text[0] = listLectures[secondLecture].titlu[i];
-    text[1] = '\0';
-
-    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
-
-    DrawTextEx(textFont, text, (Vector2){card.x + card.width + (PHONE_WIDTH - card.x - card.width) / 2 - titleCharSize.x / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1, WHITE);
-
-  }
-
-  drawTextInMiddleWrapped(listLectures[thirdLecture] .titlu, card.x, PHONE_HEIGHT / 35 * 33, card.width, titleFontSize);
-
-  char timeStr[6];
-  snprintf(timeStr, 6, "%d", maxTime - timer);
-  drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 8, card.width, PHONE_WIDTH / 12);
-
-  drawButtonTexture(pauseButton, &pauseTexture);
-
-  char scoreStr[6];
-  snprintf(scoreStr, 6, "%d", score);
-
-  drawTextInMiddleWrapped(scoreStr, card.x, PHONE_HEIGHT / 20, card.width, PHONE_WIDTH / 6);
-  if (currentState == PAUSED)
-  {
-    DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, (Color){0x00, 0x00, 0x00, 0xAA});
-    drawTextInMiddleWrapped("Paused", card.x, PHONE_HEIGHT / 2 - PHONE_WIDTH / 24, card.width, PHONE_WIDTH / 12);
-  }
-
-  if (overlayColor.a != 0x00)
-  {
-    DrawRectangle(0, 0, PHONE_WIDTH, PHONE_HEIGHT, overlayColor);
-  }
-
   EndDrawing();
 }
 
-void quit()
-{
-  UnloadSound(goodSound);
-  UnloadSound(badSound);
-  UnloadFont(textFont);
-  UnloadTexture(backgroundTexture);
-  UnloadTexture(rectTexture);
-  UnloadTexture(cardTexture);
-  UnloadTexture(pauseTexture);
-
-  if (score > highScore)
-  {
-    char scoreStr[6];
-    snprintf(scoreStr, 6, "%d", score);
-    SaveFileText("savedata/highScore.sv", scoreStr);
-  }
-
-  CloseAudioDevice();
-  CloseWindow();
-}
-
-void renderCard()
+void drawCard()
 {
   Rectangle sourceRec = {0, 0, cardTexture.width, cardTexture.height};
-  Rectangle cardDrawRect = {-1, -1, card.width, card.height};
+  Rectangle cardDrawRect = {card.x + card.width / 2, card.y + card.height / 2, card.width, card.height};
 
   int cardRotation = 0;
-  if (startSwipeX != 0 && startSwipeY != 0)
+  if (startSwipeX >= card.x && startSwipeX <= card.x + card.width 
+  &&  startSwipeY >= card.y && startSwipeY <= card.y + card.height)
   {
     cardDrawRect.x = card.x - (startSwipeX - GetTouchX()) * 2 + card.width / 2;
     cardDrawRect.y = card.y - (startSwipeY - GetTouchY()) * 2 + card.height / 2;
     cardRotation = (GetTouchX() - startSwipeX) / 6;
   }
-  else
-  {
-    cardDrawRect.x = card.x + card.width  / 2;
-    cardDrawRect.y = card.y + card.height / 2;
-  }
+
   DrawTexturePro(cardTexture, sourceRec, card, (Vector2){0, 0}, 0, GRAY);
   DrawTexturePro(cardTexture, sourceRec, cardDrawRect, (Vector2){card.width / 2, card.height / 2}, cardRotation, WHITE);
 
@@ -399,6 +425,39 @@ void renderCard()
 
   drawCardInfoText(infoText, cardDrawRect, PHONE_WIDTH / 16, cardRotation);
 
+}
+
+void drawLecturesSideText()
+{
+  char *lectureTitle = listLectures[firstLecture].titlu;
+  int titleFontSize = PHONE_WIDTH / 12;
+
+  for(int i = 0; i < strlen(lectureTitle); i++)
+  {
+    char text[2];
+    text[0] = listLectures[firstLecture].titlu[i];
+    text[1] = '\0';
+
+    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
+
+    DrawTextEx(textFont, text, (Vector2){(card.x - titleCharSize.x) / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1,  WHITE);
+
+  }
+
+  lectureTitle = listLectures[secondLecture].titlu;
+  for(int i = 0; i < strlen(lectureTitle); i++)
+  {
+    char text[2];
+    text[0] = listLectures[secondLecture].titlu[i];
+    text[1] = '\0';
+
+    Vector2 titleCharSize = MeasureTextEx(textFont, text, titleFontSize, 1);
+
+    DrawTextEx(textFont, text, (Vector2){card.x + card.width + (PHONE_WIDTH - card.x - card.width) / 2 - titleCharSize.x / 2, card.y + card.height / 2 - strlen(lectureTitle) * titleFontSize / 2 + titleFontSize / 10 * 9 * i}, titleFontSize, 1, WHITE);
+
+  }
+
+  drawTextInMiddleWrapped(listLectures[thirdLecture] .titlu, card.x, PHONE_HEIGHT / 35 * 33, card.width, titleFontSize);
 }
 
 void drawWrapedText(char *text, int x, int y, int w, int fontSize)
@@ -512,6 +571,27 @@ void drawTextInMiddleWrapped(char *text, int x, int y, int w, int fontSize)
     textToDrawSize = MeasureTextEx(textFont, textToDraw, fontSize, 1);
 
   } while(nextWord);
+}
+
+void quit()
+{
+  UnloadSound(goodSound);
+  UnloadSound(badSound);
+  UnloadFont(textFont);
+  UnloadTexture(backgroundTexture);
+  UnloadTexture(rectTexture);
+  UnloadTexture(cardTexture);
+  UnloadTexture(exitTexture);
+
+  if (score > highScore)
+  {
+    char scoreStr[6];
+    snprintf(scoreStr, 6, "%d", score);
+    SaveFileText("savedata/highScore.sv", scoreStr);
+  }
+
+  CloseAudioDevice();
+  CloseWindow();
 }
 
 int isScreenTouched()

@@ -1,14 +1,15 @@
-#include "Button.h"
+#include "ToggleButton.h"
 #include "raylib.h"
 #include <stdio.h>
 
-Button createButton(int x, int y, int w, int h)
+ToggleButton createToggleButton(int x, int y, int w, int h)
 {
-  Button btn;
+  ToggleButton btn;
   btn.x = x;
   btn.y = y;
   btn.w = w;
   btn.h = h;
+  btn.isToggled = 0;
   btn.isHeld = 0;
 
   return btn;
@@ -16,7 +17,7 @@ Button createButton(int x, int y, int w, int h)
 
 int isScreenTouched();
 
-int isButtonPressed(Button *btn)
+int isToggleButtonPressed(ToggleButton *btn)
 {
   int touchX = GetTouchX();
   int touchY = GetTouchY();
@@ -36,20 +37,26 @@ int isButtonPressed(Button *btn)
   if (!isScreenTouched() && btn->isHeld == 1) //if button was released
   {
     btn->isHeld = 0;
-    return 1;
+    btn->isToggled = !btn->isToggled;
   }
 
   return 0;
 }
 
-void drawButton(Button btn, Color color)
+void drawToggleButton(ToggleButton btn, Color color)
 {
-  DrawRectangle(btn.x, btn.y, btn.w, btn.h, color);
+  if (btn.isToggled)
+    DrawRectangle(btn.x, btn.y, btn.w, btn.h, color);
+  else
+    DrawRectangle(btn.x, btn.y, btn.w, btn.h, (Color){color.r - 10, color.g - 10, color.b - 10, color.a});
 }
 
-void drawButtonTexture(Button btn, Texture2D *texture)
+void drawToggleButtonTexture(ToggleButton btn, Texture2D *texture)
 {
   Rectangle sourceRec = {0, 0, texture->width, texture->height};
   Rectangle destRec   = {btn.x, btn.y, btn.w, btn.h};
-  DrawTexturePro(*texture, sourceRec, destRec, (Vector2){0, 0}, 0, WHITE);
+  if (btn.isToggled)
+    DrawTexturePro(*texture, sourceRec, destRec, (Vector2){0, 0}, 0, WHITE);
+  else
+    DrawTexturePro(*texture, sourceRec, destRec, (Vector2){0, 0}, 0, (Color){180, 180, 180, 255});
 }

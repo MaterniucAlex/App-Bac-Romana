@@ -8,11 +8,12 @@ typedef struct {
   int y;
   int w;
   int h;
+  int isHeld;
   char *text;
 } Button;
 
 Button createButton(int x, int y, int w, int h);
-int isButtonPressed(Button btn);
+int isButtonPressed(Button *btn);
 void drawButton(Button btn, Color color);
 void drawButtonTexture(Button btn, Texture2D *texture);
 

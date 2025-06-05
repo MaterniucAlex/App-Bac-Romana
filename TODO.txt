@@ -1,0 +1,4 @@
+[x] Make all lectures toggleable
+[x] Make a reset button in-game
+[] Make game art for the rest of the buttons
+[] Tutorial
