@@ -70,6 +70,7 @@ enum GameState {
 enum GameState currentState;
 Sound goodSound;
 Sound badSound;
+Sound clickSound;
 
 Texture2D backgroundTexture;
 Texture2D rectTexture;
@@ -119,10 +120,10 @@ void init()
 
   initLectures(listLectures);
 
-  startButton   = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
-  optionsButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
-  mainMenuButton= createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 4 * 3 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 6);
-  exitButton   = createButton(PHONE_WIDTH / 36 * 35 - PHONE_WIDTH / 12, PHONE_WIDTH / 36, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
+  startButton    = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
+  optionsButton  = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 2 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 4);
+  mainMenuButton = createButton(PHONE_WIDTH / 4, PHONE_HEIGHT / 4 * 3 + PHONE_WIDTH / 3 - PHONE_WIDTH / 8, PHONE_WIDTH / 2, PHONE_WIDTH / 6);
+  exitButton     = createButton(PHONE_WIDTH / 32 * 30 - PHONE_WIDTH / 24, PHONE_WIDTH / 32 * 2, PHONE_WIDTH / 12, PHONE_WIDTH / 12);
 
   for(int i = 0; i < 15; i++)
   {
@@ -143,13 +144,14 @@ void init()
 
   goodSound = LoadSound("sounds/good.wav");
   badSound  = LoadSound("sounds/bad.wav");
+  clickSound  = LoadSound("sounds/click.wav");
 
   backgroundTexture   = LoadTexture("img/bg.png");
   rectTexture         = LoadTexture("img/rect.png");
   cardTexture         = LoadTexture("img/card.png");
   exitTexture         = LoadTexture("img/pause.png");
   pointerTexture      = LoadTexture("img/pointer.png");
-  pointerTexture2      = LoadTexture("img/pointer2.png");
+  pointerTexture2     = LoadTexture("img/pointer2.png");
 }
 
 int swipeDistanceX = 0;
@@ -202,6 +204,8 @@ void update()
           break;
         }
 
+        PlaySound(clickSound);
+
         if (firstTimePlaying) selectedInfo = 21;
         else selectedInfo = (rand() % 3 + 1) * 10 + rand() % 7 + 1; 
 
@@ -213,17 +217,20 @@ void update()
       }
       if (isButtonPressed(&optionsButton))
       {
+        PlaySound(clickSound);
         currentState = OPTIONS;
       }
       break;
     case OPTIONS:
       if (isButtonPressed(&mainMenuButton))
       {
+        PlaySound(clickSound);
         currentState = MAIN_MENU;
       }
       for(int i = 0; i < 15; i++)
       {
-        isToggleButtonPressed(&lecturesButtonList[i]);
+        if (isToggleButtonPressed(&lecturesButtonList[i])) 
+          PlaySound(clickSound);
       }
       break;
     case GAME:
@@ -239,18 +246,21 @@ void update()
       }
       if (isButtonPressed(&exitButton))
       {
+        PlaySound(clickSound);
         currentState = MAIN_MENU;
         startSwipeX = 0;
         startSwipeY = 0;
         break;
       }
 
-      if (maxTime - timer != maxTime - (int)GetTime() + timerStart && maxTime - (int)GetTime() + timerStart != 5)
+      if (firstTimePlaying)
+        timerStart = GetTime();
+      timer = GetTime() - timerStart;//timer = how many seconds passed since timerStart
+
+      if (timer > 0)
       {
         overlayColor.a = 0x00;
       }
-      if (!firstTimePlaying)
-        timer = GetTime() - timerStart;
 
       if (timer >= maxTime)
       {
@@ -346,6 +356,7 @@ void render()
     case MAIN_MENU:
       drawButtonTexture(startButton, &rectTexture);
       drawTextInMiddleWrapped("Play", startButton.x, startButton.y + startButton.h / 3, startButton.w, startButton.h / 3);
+
       drawButtonTexture(optionsButton, &rectTexture);
       drawTextInMiddleWrapped("Options", optionsButton.x, optionsButton.y + optionsButton.h / 3, optionsButton.w, optionsButton.h / 3);
       break;
@@ -370,12 +381,13 @@ void render()
       //time
       char timeStr[6];
       snprintf(timeStr, 6, "%d", maxTime - timer);
-      drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 8, card.width, PHONE_WIDTH / 12);
+      if (!firstTimePlaying)
+        drawTextInMiddleWrapped(timeStr, card.x, PHONE_HEIGHT / 4, card.width, PHONE_WIDTH / 12);
 
       //score
       char scoreStr[6];
       snprintf(scoreStr, 6, "%d", score);
-      drawTextInMiddleWrapped(scoreStr, card.x, PHONE_HEIGHT / 20, card.width, PHONE_WIDTH / 6);
+      drawTextInMiddleWrapped(scoreStr, card.x, PHONE_HEIGHT / 6, card.width, PHONE_WIDTH / 6);
 
       drawButtonTexture(exitButton, &exitTexture);
 
@@ -609,6 +621,7 @@ void quit()
 {
   UnloadSound(goodSound);
   UnloadSound(badSound);
+  UnloadSound(clickSound);
   UnloadFont(textFont);
   UnloadTexture(backgroundTexture);
   UnloadTexture(rectTexture);
