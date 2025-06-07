@@ -47,9 +47,9 @@ ToggleButton lecturesButtonList[15];
 
 Lecture listLectures[15];
 
-int firstLecture;
-int secondLecture;
-int thirdLecture;
+int  firstLecture = -1;
+int secondLecture = -1;
+int  thirdLecture = -1;
 
 int selectedInfo;
 
@@ -178,9 +178,9 @@ int selectLectures()
   for(int i = 0, k = -1; i < 15; i++)
   {
     if (lecturesButtonList[i].isToggled) k++;
-    if (k == firstLectureId)   firstLecture = i;
-    if (k == secondLectureId) secondLecture = i;
-    if (k == thirdLectureId){  thirdLecture = i; i = 15;}
+    if (k == firstLectureId  &&  firstLecture == -1)  firstLecture = i;
+    if (k == secondLectureId && secondLecture == -1) secondLecture = i;
+    if (k == thirdLectureId  &&  thirdLecture == -1){ thirdLecture = i; i = 15;}
   }
 
   return 1;
@@ -250,6 +250,9 @@ void update()
         currentState = MAIN_MENU;
         startSwipeX = 0;
         startSwipeY = 0;
+        firstLecture = -1;
+        secondLecture= -1;
+        thirdLecture = -1;
         break;
       }
 
